@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Estácio — Verificação de Registro</title>
+
+  <style>
+    :root {
+      --bg: #005daa;
+      --card: #fff;
+      --accent: #003f73;
+      --muted: #e5e5e5;
+      --text: #000;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      padding: 24px;
+      color: var(--text);
+    }
+
+    .container {
+      background: var(--card);
+      padding: 24px;
+      width: 480px;
+      border-radius: 14px;
+      box-shadow: 0 6px 18px rgba(0,0,0,.22);
+    }
+
+    h1 {
+      margin: 0 0 10px 0;
+      color: var(--accent);
+      text-align: center;
+      font-size: 26px;
+    }
+
+    p {
+      text-align: center;
+      margin-bottom: 18px;
+      color: #333;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--muted);
+      font-size: 15px;
+      box-sizing: border-box;
+    }
+
+    button {
+      background: var(--accent);
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      opacity: 0.95;
+    }
+
+    .result {
+      margin-top: 14px;
+      background: var(--muted);
+      padding: 14px;
+      border-radius: 8px;
+      min-height: 60px;
+      line-height: 1.5;
+    }
+
+    .loading {
+      text-align: center;
+      font-weight: bold;
+      color: var(--accent);
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+      0% { opacity: 1; }
+      50% { opacity: .5; }
+      100% { opacity: 1; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Verificação de Diploma</h1>
+    <p>Digite o número de registro exatamente como informado:</p>
+
+    <input id="codigo" placeholder="Ex: 13342-43" />
+    <button onclick="verificar()">Verificar</button>
+
+    <div id="resultado" class="result"></div>
+  </div>
+
+  <script>
+    function normalizar(s) {
+      return String(s)
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toUpperCase()
+        .replace(/\s+/g, "")
+        .trim();
+    }
+
+    const registros = {
+      "466447-6": {
+        nome: "Vanessa Forasteiro G. dos Santos",
+        curso: "Bacharel em Serviço Social",
+        conclusao: "04/02/2025",
+        status: "Ativo",
+        polo: "Centro Universitário Estácio do Rio de Janeiro"
+      },
+      "13342-43": {
+        nome: "Angela Maria Viana Dutra",
+        curso: "Bacharel em Enfermagem",
+        conclusao: "15/08/2025",
+        status: "Ativo",
+        polo: "Centro Universitário Estácio de São Paulo"
+      },
+      "9976508-33": {
+        nome: "Maria Marta Viana da Silva",
+        curso: "Bacharel em Psicologia",
+        conclusao: "22/08/2025",
+        status: "Ativo",
+        polo: "Centro Universitário Estácio do Maranhão"
+      },
+      "3664356-55": {
+        nome: "Tatiane Lucachinski",
+        curso: "Bacharel em Farmácia",
+        conclusao: "13/08/2025",
+        status: "Ativo",
+        polo: "Centro Universitário Estácio de Santa Catarina"
+      },
+      "367632-99": {
+        nome: "Cleia de Jesus Nascimento",
+        curso: "Bacharel em Enfermagem",
+        conclusao: "10/08/2024",
+        status: "Ativo",
+        polo: "Centro Universitário Estácio de São Paulo"
+      },
+      "2577544-99": {
+        nome: "Flávia Letícia de Oliveira e Costa",
+        curso: "Licenciatura em Pedagogia",
+        conclusao: "13/01/2026",
+        status: "Ativo",
+        polo: "Centro Universitário Estácio de Goiás"
+      },
+      "3664345-89": {
+        nome: "Miriam Cristina Tavares Rossetto",
+        curso: "Licenciatura em Biblioteconomia",
+        conclusao: "27/06/2025",
+        status: "Ativo",
+        polo: "Centro Universitário Estácio de Minas Gerais"
+      }
+    };
+
+    function verificar() {
+      const valor = document.getElementById("codigo").value.trim();
+      const saida = document.getElementById("resultado");
+
+      if (!valor) {
+        saida.innerHTML = "<strong>Digite um código.</strong>";
+        return;
+      }
+
+      saida.innerHTML = '<div class="loading">Carregando...</div>';
+
+      setTimeout(() => {
+        const chave = Object.keys(registros)
+          .find(k => normalizar(k) === normalizar(valor));
+
+        if (!chave) {
+          saida.innerHTML = "<strong>Código não encontrado.</strong>";
+          return;
+        }
+
+        const r = registros[chave];
+
+        saida.innerHTML = `
+          <strong>Aluno:</strong> ${r.nome}<br/>
+          <strong>Curso:</strong> ${r.curso}<br/>
+          <strong>Conclusão:</strong> ${r.conclusao}<br/>
+          <strong>Status:</strong> ${r.status}<br/>
+          <strong>Polo:</strong> ${r.polo}
+        `;
+      }, 1200);
+    }
+  </script>
+</body>
+</html>
