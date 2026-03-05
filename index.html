@@ -1,167 +1,187 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Estácio — Verificação de Registro</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Estácio — Verificação de Registro</title>
 
-  <style>
-    :root {
-      --bg: #005daa;
-      --card: #fff;
-      --accent: #003f73;
-      --muted: #e5e5e5;
-      --text: #000;
-    }
+<style>
+:root{
+--bg:#005daa;
+--card:#fff;
+--accent:#003f73;
+--muted:#e5e5e5;
+--text:#000;
+}
 
-    body {
-      margin: 0;
-      background: var(--bg);
-      font-family: Arial, sans-serif;
-      display: flex;
-      justify-content: center;
-      padding: 24px;
-      color: var(--text);
-    }
+body{
+margin:0;
+background:var(--bg);
+font-family:Arial,sans-serif;
+display:flex;
+justify-content:center;
+padding:24px;
+color:var(--text);
+}
 
-    .container {
-      background: var(--card);
-      padding: 24px;
-      width: 480px;
-      border-radius: 14px;
-      box-shadow: 0 6px 18px rgba(0,0,0,.22);
-    }
+.container{
+background:var(--card);
+padding:24px;
+width:480px;
+border-radius:14px;
+box-shadow:0 6px 18px rgba(0,0,0,.22);
+}
 
-    h1 {
-      margin: 0 0 10px 0;
-      color: var(--accent);
-      text-align: center;
-      font-size: 26px;
-    }
+h1{
+margin:0 0 10px 0;
+color:var(--accent);
+text-align:center;
+font-size:26px;
+}
 
-    p {
-      text-align: center;
-      margin-bottom: 18px;
-      color: #333;
-    }
+p{
+text-align:center;
+margin-bottom:18px;
+color:#333;
+}
 
-    input, button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 10px;
-      border-radius: 8px;
-      border: 1px solid var(--muted);
-      font-size: 15px;
-      box-sizing: border-box;
-    }
+input,button{
+width:100%;
+padding:12px;
+margin-top:10px;
+border-radius:8px;
+border:1px solid var(--muted);
+font-size:15px;
+box-sizing:border-box;
+}
 
-    button {
-      background: var(--accent);
-      color: white;
-      cursor: pointer;
-      font-weight: bold;
-    }
+button{
+background:var(--accent);
+color:white;
+cursor:pointer;
+font-weight:bold;
+}
 
-    button:hover {
-      opacity: 0.95;
-    }
+button:hover{
+opacity:.95;
+}
 
-    .result {
-      margin-top: 14px;
-      background: var(--muted);
-      padding: 14px;
-      border-radius: 8px;
-      min-height: 60px;
-      line-height: 1.5;
-    }
+.result{
+margin-top:14px;
+background:var(--muted);
+padding:14px;
+border-radius:8px;
+min-height:60px;
+line-height:1.5;
+}
 
-    .loading {
-      text-align: center;
-      font-weight: bold;
-      color: var(--accent);
-      animation: blink 1s infinite;
-    }
+.loading{
+text-align:center;
+font-weight:bold;
+color:var(--accent);
+animation:blink 1s infinite;
+}
 
-    @keyframes blink {
-      0% { opacity: 1; }
-      50% { opacity: .5; }
-      100% { opacity: 1; }
-    }
-  </style>
+@keyframes blink{
+0%{opacity:1;}
+50%{opacity:.5;}
+100%{opacity:1;}
+}
+</style>
 </head>
 
 <body>
-  <div class="container">
-    <h1>Verificação de Diploma</h1>
-    <p>Digite o número de registro exatamente como informado:</p>
 
-    <input id="codigo" placeholder="Ex: 13342-43" />
-    <button onclick="verificar()">Verificar</button>
+<div class="container">
 
-    <div id="resultado" class="result"></div>
-  </div>
+<h1>Verificação de Diploma</h1>
 
-  <script>
-    function normalizar(s) {
-      return String(s)
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .toUpperCase()
-        .replace(/\s+/g, "")
-        .trim();
-    }
+<p>Digite o número de registro exatamente como informado:</p>
 
-    const registros = {
+<input id="codigo" placeholder="Ex: 13342-43"/>
 
-      "377643-22": {
-        nome: "Enedina da Silva Bezerra Neta",
-        curso: "Bacharel em Educação Física",
-        conclusao: "13/02/2026",
-        status: "Ativo",
-        polo: "Centro Universitário Estácio do Piauí"
-      },
+<button onclick="verificar()">Verificar</button>
 
-      "23578812-63": {
-        nome: "Marcia Geronima Benites",
-        curso: "Pós-Graduação em Neuropsicopedagogia",
-        conclusao: "18/06/2023",
-        status: "Concluído",
-        polo: "Centro Universitário Estácio do Maranhão"
-      }
+<div id="resultado" class="result"></div>
 
-    };
+</div>
 
-    function verificar() {
-      const valor = document.getElementById("codigo").value.trim();
-      const saida = document.getElementById("resultado");
+<script>
 
-      if (!valor) {
-        saida.innerHTML = "<strong>Digite um código.</strong>";
-        return;
-      }
+function normalizar(s){
+return String(s)
+.normalize("NFD")
+.replace(/[\u0300-\u036f]/g,"")
+.toUpperCase()
+.replace(/\s+/g,"")
+.trim();
+}
 
-      saida.innerHTML = '<div class="loading">Carregando...</div>';
+const registros={
 
-      setTimeout(() => {
-        const chave = Object.keys(registros)
-          .find(k => normalizar(k) === normalizar(valor));
+"377643-22":{
+nome:"Enedina da Silva Bezerra Neta",
+curso:"Bacharel em Educação Física",
+conclusao:"13/02/2026",
+status:"Ativo",
+polo:"Centro Universitário Estácio do Piauí"
+},
 
-        if (!chave) {
-          saida.innerHTML = "<strong>Código não encontrado.</strong>";
-          return;
-        }
+"23578812-63":{
+nome:"Marcia Geronima Benites",
+curso:"Pós-Graduação em Neuropsicopedagogia",
+conclusao:"18/06/2023",
+status:"Concluído",
+polo:"Centro Universitário Estácio do Maranhão"
+},
 
-        const r = registros[chave];
+"257753-99":{
+nome:"Neiva Brum Teixeira Gomes Torres",
+curso:"Tecnólogo em Gestão Ambiental",
+conclusao:"13/12/2025",
+status:"Concluído",
+polo:"Centro Universitário Estácio do Rio de Janeiro"
+}
 
-        saida.innerHTML = `
-          <strong>Aluno:</strong> ${r.nome}<br/>
-          <strong>Curso:</strong> ${r.curso}<br/>
-          <strong>Conclusão:</strong> ${r.conclusao}<br/>
-          <strong>Status:</strong> ${r.status}<br/>
-          <strong>Polo:</strong> ${r.polo}
-        `;
-      }, 1200);
-    }
-  </script>
+};
+
+function verificar(){
+
+const valor=document.getElementById("codigo").value.trim();
+const saida=document.getElementById("resultado");
+
+if(!valor){
+saida.innerHTML="<strong>Digite um código.</strong>";
+return;
+}
+
+saida.innerHTML='<div class="loading">Carregando...</div>';
+
+setTimeout(()=>{
+
+const chave=Object.keys(registros)
+.find(k=>normalizar(k)===normalizar(valor));
+
+if(!chave){
+saida.innerHTML="<strong>Código não encontrado.</strong>";
+return;
+}
+
+const r=registros[chave];
+
+saida.innerHTML=`
+<strong>Aluno:</strong> ${r.nome}<br>
+<strong>Curso:</strong> ${r.curso}<br>
+<strong>Conclusão:</strong> ${r.conclusao}<br>
+<strong>Status:</strong> ${r.status}<br>
+<strong>Polo:</strong> ${r.polo}
+`;
+
+},1200);
+
+}
+
+</script>
+
 </body>
 </html>
