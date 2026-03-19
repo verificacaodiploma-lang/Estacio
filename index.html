@@ -5,105 +5,194 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Estácio — Verificação de Registro</title>
 
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
 <style>
 :root{
---bg:#005daa;
---card:#fff;
+--primary:#005daa;
 --accent:#003f73;
---muted:#e5e5e5;
---text:#000;
+--bg:#eef3f9;
+--card:#fff;
+--border:#e5e7eb;
+--text:#111827;
+--success:#16a34a;
 }
 
 body{
 margin:0;
 background:var(--bg);
-font-family:Arial,sans-serif;
-display:flex;
-justify-content:center;
-padding:24px;
+font-family:system-ui,Arial;
 color:var(--text);
 }
 
+/* HEADER */
+.header{
+background:#fff;
+border-bottom:1px solid var(--border);
+padding:18px;
+text-align:center;
+}
+
+.header h1{
+margin:0;
+color:var(--primary);
+}
+
+/* CONTAINER */
 .container{
+max-width:700px;
+margin:30px auto;
+padding:20px;
+}
+
+/* CARD */
+.card{
 background:var(--card);
-padding:24px;
-width:480px;
-border-radius:14px;
-box-shadow:0 6px 18px rgba(0,0,0,.22);
+border-radius:12px;
+box-shadow:0 10px 25px rgba(0,0,0,.05);
+border:1px solid var(--border);
 }
 
-h1{
-margin:0 0 10px 0;
-color:var(--accent);
-text-align:center;
-font-size:26px;
+.card-header{
+background:var(--primary);
+color:#fff;
+padding:14px;
+font-weight:bold;
 }
 
-p{
-text-align:center;
-margin-bottom:18px;
-color:#333;
+.card-body{
+padding:20px;
 }
 
-input,button{
-width:100%;
+/* SEARCH */
+.search{
+display:flex;
+gap:10px;
+}
+
+input{
+flex:1;
 padding:12px;
-margin-top:10px;
-border-radius:8px;
-border:1px solid var(--muted);
-font-size:15px;
-box-sizing:border-box;
+border-radius:6px;
+border:1px solid var(--border);
 }
 
 button{
-background:var(--accent);
-color:white;
-cursor:pointer;
+background:var(--primary);
+color:#fff;
+border:none;
+padding:12px 16px;
+border-radius:6px;
 font-weight:bold;
+cursor:pointer;
 }
 
 button:hover{
 opacity:.95;
 }
 
-.result{
-margin-top:14px;
-background:var(--muted);
-padding:14px;
-border-radius:8px;
-min-height:60px;
-line-height:1.5;
+/* STATUS */
+.status{
+display:inline-block;
+background:#ecfdf5;
+color:var(--success);
+padding:6px 12px;
+border-radius:999px;
+font-weight:bold;
+margin-bottom:15px;
 }
 
-.loading{
-text-align:center;
+/* FIELDS */
+.field{
+display:grid;
+grid-template-columns:180px 1fr;
+padding:8px 0;
+border-bottom:1px solid #f1f5f9;
+}
+
+.label{
+color:#6b7280;
+font-weight:600;
+}
+
+.value{
+font-weight:600;
+}
+
+/* LOADER */
+.loader{
+display:none;
+margin-top:10px;
 font-weight:bold;
-color:var(--accent);
+color:var(--primary);
 animation:blink 1s infinite;
 }
 
 @keyframes blink{
 0%{opacity:1;}
-50%{opacity:.5;}
+50%{opacity:.4;}
 100%{opacity:1;}
+}
+
+#qrcode{
+margin-top:15px;
+}
+
+/* PRINT MODE */
+@media print{
+.search, button, .header{
+display:none;
+}
+
+.card{
+box-shadow:none;
+border:2px solid #000;
+}
 }
 </style>
 </head>
 
 <body>
 
+<div class="header">
+<h1>Portal Acadêmico Estácio</h1>
+</div>
+
 <div class="container">
+<div class="card">
 
-<h1>Verificação de Diploma</h1>
+<div class="card-header">Consulta de Registro</div>
 
-<p>Digite o número de registro exatamente como informado:</p>
+<div class="card-body">
 
-<input id="codigo" placeholder="Ex: 13342-43"/>
+<div class="search">
+<input id="codigo" placeholder="Digite o número do registro"/>
+<button onclick="verificar()">Consultar</button>
+</div>
 
-<button onclick="verificar()">Verificar</button>
+<div id="loader" class="loader">Consultando base acadêmica...</div>
 
-<div id="resultado" class="result"></div>
+<div id="resultado" style="display:none; margin-top:20px;">
 
+<div class="status">● Registro Ativo</div>
+
+<div class="field"><div class="label">Nome</div><div class="value" id="nome"></div></div>
+<div class="field"><div class="label">Curso</div><div class="value" id="curso"></div></div>
+<div class="field"><div class="label">Conclusão</div><div class="value" id="conclusao"></div></div>
+<div class="field"><div class="label">Polo</div><div class="value" id="polo"></div></div>
+<div class="field"><div class="label">Registro</div><div class="value" id="registro"></div></div>
+<div class="field"><div class="label">Protocolo</div><div class="value" id="protocolo"></div></div>
+<div class="field"><div class="label">Data da Consulta</div><div class="value" id="data"></div></div>
+
+<div id="qrcode"></div>
+
+<br>
+<button onclick="window.print()">Imprimir</button>
+
+</div>
+
+</div>
+</div>
 </div>
 
 <script>
@@ -157,45 +246,102 @@ curso:"Licenciatura em Pedagogia",
 conclusao:"23/12/2016",
 status:"Concluído",
 polo:"Centro Universitário Estácio de Minas Gerais"
+},
+
+"246646-98":{
+nome:"Gerlane Paula de Alencar Lima Silva",
+curso:"Pós-Graduação em Psicomotricidade e Desenvolvimento Humano",
+conclusao:"14/12/2025",
+status:"Concluído",
+polo:"Centro Universitário Estácio do Recife — Campus Abdias de Carvalho"
 }
 
 };
 
+function gerarProtocolo(){
+const base = Math.random().toString(36).substring(2,6).toUpperCase();
+const time = Date.now().toString().slice(-6);
+return `EST-${base}-${time}`;
+}
+
+function delayRealista(){
+return 900 + Math.random()*1400;
+}
+
+function validarFormato(codigo){
+return /^\d{5,8}-\d{2}$/.test(codigo);
+}
+
 function verificar(){
 
 const valor=document.getElementById("codigo").value.trim();
-const saida=document.getElementById("resultado");
+const loader=document.getElementById("loader");
+const resultado=document.getElementById("resultado");
 
 if(!valor){
-saida.innerHTML="<strong>Digite um código.</strong>";
+alert("Informe o número do registro.");
 return;
 }
 
-saida.innerHTML='<div class="loading">Carregando...</div>';
+if(!validarFormato(valor)){
+alert("Formato inválido. Use padrão: 000000-00");
+return;
+}
+
+resultado.style.display="none";
+loader.style.display="block";
 
 setTimeout(()=>{
+
+loader.style.display="none";
 
 const chave=Object.keys(registros)
 .find(k=>normalizar(k)===normalizar(valor));
 
 if(!chave){
-saida.innerHTML="<strong>Código não encontrado.</strong>";
+alert("Registro não localizado na base acadêmica.");
 return;
 }
 
 const r=registros[chave];
+const protocolo=gerarProtocolo();
+const agora=new Date().toLocaleString("pt-BR");
 
-saida.innerHTML=`
-<strong>Aluno:</strong> ${r.nome}<br>
-<strong>Curso:</strong> ${r.curso}<br>
-<strong>Conclusão:</strong> ${r.conclusao}<br>
-<strong>Status:</strong> ${r.status}<br>
-<strong>Polo:</strong> ${r.polo}
-`;
+document.getElementById("nome").innerText=r.nome;
+document.getElementById("curso").innerText=r.curso;
+document.getElementById("conclusao").innerText=r.conclusao;
+document.getElementById("polo").innerText=r.polo;
+document.getElementById("registro").innerText=chave;
+document.getElementById("protocolo").innerText=protocolo;
+document.getElementById("data").innerText=agora;
 
-},1200);
+document.getElementById("qrcode").innerHTML="";
+
+const payload = JSON.stringify({
+registro: chave,
+nome: r.nome,
+protocolo: protocolo,
+data: agora
+});
+
+new QRCode(document.getElementById("qrcode"),{
+text: payload,
+width:120,
+height:120
+});
+
+resultado.style.display="block";
+
+}, delayRealista());
 
 }
+
+// ENTER para buscar
+document.getElementById("codigo").addEventListener("keypress",function(e){
+if(e.key==="Enter"){
+verificar();
+}
+});
 
 </script>
 
