@@ -16,6 +16,7 @@
 --border:#e5e7eb;
 --text:#111827;
 --success:#16a34a;
+--done:#2563eb;
 }
 
 body{
@@ -25,7 +26,6 @@ font-family:system-ui,Arial;
 color:var(--text);
 }
 
-/* HEADER */
 .header{
 background:#fff;
 border-bottom:1px solid var(--border);
@@ -38,14 +38,12 @@ margin:0;
 color:var(--primary);
 }
 
-/* CONTAINER */
 .container{
 max-width:700px;
 margin:30px auto;
 padding:20px;
 }
 
-/* CARD */
 .card{
 background:var(--card);
 border-radius:12px;
@@ -64,7 +62,6 @@ font-weight:bold;
 padding:20px;
 }
 
-/* SEARCH */
 .search{
 display:flex;
 gap:10px;
@@ -91,18 +88,14 @@ button:hover{
 opacity:.95;
 }
 
-/* STATUS */
 .status{
 display:inline-block;
-background:#ecfdf5;
-color:var(--success);
 padding:6px 12px;
 border-radius:999px;
 font-weight:bold;
 margin-bottom:15px;
 }
 
-/* FIELDS */
 .field{
 display:grid;
 grid-template-columns:180px 1fr;
@@ -119,7 +112,6 @@ font-weight:600;
 font-weight:600;
 }
 
-/* LOADER */
 .loader{
 display:none;
 margin-top:10px;
@@ -138,7 +130,6 @@ animation:blink 1s infinite;
 margin-top:15px;
 }
 
-/* PRINT MODE */
 @media print{
 .search, button, .header{
 display:none;
@@ -174,7 +165,7 @@ border:2px solid #000;
 
 <div id="resultado" style="display:none; margin-top:20px;">
 
-<div class="status">● Registro Ativo</div>
+<div class="status" id="status"></div>
 
 <div class="field"><div class="label">Nome</div><div class="value" id="nome"></div></div>
 <div class="field"><div class="label">Curso</div><div class="value" id="curso"></div></div>
@@ -216,44 +207,12 @@ status:"Ativo",
 polo:"Centro Universitário Estácio do Piauí"
 },
 
-"23578812-63":{
-nome:"Marcia Geronima Benites",
-curso:"Pós-Graduação em Neuropsicopedagogia",
-conclusao:"18/06/2023",
+"36774467-88":{
+nome:"Ramon de Carvalho Conceição",
+curso:"Bacharel em Engenharia Elétrica",
+conclusao:"24/08/2025",
 status:"Concluído",
-polo:"Centro Universitário Estácio do Maranhão"
-},
-
-"257753-99":{
-nome:"Neiva Brum Teixeira Gomes Torres",
-curso:"Tecnólogo em Gestão Ambiental",
-conclusao:"13/12/2025",
-status:"Concluído",
-polo:"Centro Universitário Estácio do Rio de Janeiro"
-},
-
-"46655-75":{
-nome:"Emanoel Viana Santos",
-curso:"Licenciatura em Ciências da Computação",
-conclusao:"25/08/2025",
-status:"Concluído",
-polo:"Centro Universitário Estácio do Maranhão"
-},
-
-"3567654-11":{
-nome:"Elisângela de Mira Moreira Ferreira",
-curso:"Licenciatura em Pedagogia",
-conclusao:"23/12/2016",
-status:"Concluído",
-polo:"Centro Universitário Estácio de Minas Gerais"
-},
-
-"246646-98":{
-nome:"Gerlane Paula de Alencar Lima Silva",
-curso:"Pós-Graduação em Psicomotricidade e Desenvolvimento Humano",
-conclusao:"14/12/2025",
-status:"Concluído",
-polo:"Centro Universitário Estácio do Recife — Campus Abdias de Carvalho"
+polo:"Centro Universitário Estácio da Bahia — Polo Fratelli Vita (Calçada)"
 }
 
 };
@@ -315,6 +274,19 @@ document.getElementById("registro").innerText=chave;
 document.getElementById("protocolo").innerText=protocolo;
 document.getElementById("data").innerText=agora;
 
+// STATUS DINÂMICO
+const statusEl = document.getElementById("status");
+
+if(r.status === "Ativo"){
+statusEl.innerText = "● Registro Ativo";
+statusEl.style.background = "#ecfdf5";
+statusEl.style.color = "#16a34a";
+}else{
+statusEl.innerText = "● Registro Concluído";
+statusEl.style.background = "#eff6ff";
+statusEl.style.color = "#2563eb";
+}
+
 document.getElementById("qrcode").innerHTML="";
 
 const payload = JSON.stringify({
@@ -336,7 +308,6 @@ resultado.style.display="block";
 
 }
 
-// ENTER para buscar
 document.getElementById("codigo").addEventListener("keypress",function(e){
 if(e.key==="Enter"){
 verificar();
