@@ -9,107 +9,139 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-body{margin:0;background:#eef3f9;font-family:Arial}
-.container{max-width:700px;margin:30px auto;padding:20px}
-.card{background:#fff;border-radius:10px;padding:20px}
-input{padding:10px;width:70%}
-button{padding:10px;background:#005daa;color:#fff;border:none}
-.field{margin:8px 0}
-.status{margin-bottom:10px;font-weight:bold}
+body{
+  margin:0;
+  background:#eef3f9;
+  font-family:Arial,sans-serif;
+}
+.container{
+  max-width:700px;
+  margin:30px auto;
+  padding:20px;
+}
+.card{
+  background:#fff;
+  border-radius:10px;
+  padding:20px;
+}
+input{
+  padding:10px;
+  width:70%;
+}
+button{
+  padding:10px;
+  background:#005daa;
+  color:#fff;
+  border:none;
+  cursor:pointer;
+}
+.field{
+  margin:8px 0;
+}
+.status{
+  margin-bottom:10px;
+  font-weight:bold;
+}
 </style>
 </head>
 
 <body>
 
 <div class="container">
-<div class="card">
+  <div class="card">
 
-<input id="codigo" placeholder="Digite o registro"/>
-<button onclick="verificar()">Consultar</button>
+    <input id="codigo" placeholder="Digite o registro"/>
+    <button onclick="verificar()">Consultar</button>
 
-<div id="loader" style="display:none;">Consultando...</div>
+    <div id="loader" style="display:none;">Consultando...</div>
 
-<div id="resultado" style="display:none;">
+    <div id="resultado" style="display:none;">
+      <div class="status" id="status"></div>
 
-<div class="status" id="status"></div>
+      <div class="field">Nome: <span id="nome"></span></div>
+      <div class="field">Formação: <span id="curso"></span></div>
+      <div class="field">Conclusão: <span id="conclusao"></span></div>
+      <div class="field">Universidade: <span id="universidade"></span></div>
+      <div class="field">Polo: <span id="polo"></span></div>
+      <div class="field">Registro: <span id="registro"></span></div>
 
-<div class="field">Nome: <span id="nome"></span></div>
-<div class="field">Formação: <span id="curso"></span></div>
-<div class="field">Conclusão: <span id="conclusao"></span></div>
-<div class="field">Universidade: <span id="universidade"></span></div>
-<div class="field">Polo: <span id="polo"></span></div>
-<div class="field">Registro: <span id="registro"></span></div>
+      <div id="qrcode"></div>
+    </div>
 
-<div id="qrcode"></div>
-
-</div>
-
-</div>
+  </div>
 </div>
 
 <script>
 
-// 🔌 CONEXÃO (APENAS UMA VEZ)
-const supabase = window.supabase.createClient(
+// 🔌 CONEXÃO (nome diferente pra evitar erro)
+const banco = window.supabase.createClient(
   "https://fghkqwxhrdodyhvfrlzz.supabase.co",
   "sb_publishable_cwIQcgCl1O0z_CKo6E8xUQ_Y-VoPyve"
 );
 
 async function verificar(){
 
-const codigo = document.getElementById("codigo").value.trim();
-const loader = document.getElementById("loader");
-const resultado = document.getElementById("resultado");
+  const codigo = document.getElementById("codigo").value.trim();
+  const loader = document.getElementById("loader");
+  const resultado = document.getElementById("resultado");
 
-if(!codigo){
-alert("Digite o registro");
-return;
-}
+  if(!codigo){
+    alert("Digite o registro");
+    return;
+  }
 
-loader.style.display="block";
-resultado.style.display="none";
+  loader.style.display="block";
+  resultado.style.display="none";
 
-const { data, error } = await supabase
-  .from("registros")
-  .select("*")
-  .eq("registro", codigo)
-  .single();
+  try{
 
-loader.style.display="none";
+    const { data, error } = await banco
+      .from("registros")
+      .select("*")
+      .eq("registro", codigo)
+      .single();
 
-if(error || !data){
-alert("Registro não encontrado");
-return;
-}
+    loader.style.display="none";
 
-// Preencher dados
-document.getElementById("nome").innerText = data.nome;
-document.getElementById("curso").innerText = data.curso;
-document.getElementById("conclusao").innerText = data.conclusao;
-document.getElementById("universidade").innerText = data.universidade;
-document.getElementById("polo").innerText = data.polo;
-document.getElementById("registro").innerText = data.registro;
+    if(error || !data){
+      alert("Registro não encontrado");
+      return;
+    }
 
-// Status
-const statusEl = document.getElementById("status");
+    // preencher dados
+    document.getElementById("nome").innerText = data.nome || "";
+    document.getElementById("curso").innerText = data.curso || "";
+    document.getElementById("conclusao").innerText = data.conclusao || "";
+    document.getElementById("universidade").innerText = data.universidade || "";
+    document.getElementById("polo").innerText = data.polo || "";
+    document.getElementById("registro").innerText = data.registro || "";
 
-if(data.status === "Ativo"){
-statusEl.innerText = "Registro Ativo";
-statusEl.style.color = "green";
-}else{
-statusEl.innerText = "Registro Concluído";
-statusEl.style.color = "blue";
-}
+    // status
+    const statusEl = document.getElementById("status");
 
-// QR Code
-document.getElementById("qrcode").innerHTML="";
-new QRCode(document.getElementById("qrcode"),{
-text: JSON.stringify(data),
-width:120,
-height:120
-});
+    if(data.status === "Ativo"){
+      statusEl.innerText = "Registro Ativo";
+      statusEl.style.color = "green";
+    }else{
+      statusEl.innerText = "Registro Concluído";
+      statusEl.style.color = "blue";
+    }
 
-resultado.style.display="block";
+    // QR Code
+    document.getElementById("qrcode").innerHTML = "";
+    new QRCode(document.getElementById("qrcode"),{
+      text: JSON.stringify(data),
+      width:120,
+      height:120
+    });
+
+    resultado.style.display="block";
+
+  }catch(e){
+    loader.style.display="none";
+    console.error(e);
+    alert("Erro ao conectar com o sistema.");
+  }
 }
 
 </script>
