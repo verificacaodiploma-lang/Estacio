@@ -6,6 +6,7 @@
 <title>Estácio — Verificação de Registro</title>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 :root{
@@ -22,7 +23,7 @@
 body{
 margin:0;
 background:var(--bg);
-font-family:system-ui,Arial;
+font-family:system-ui,Arial,sans-serif;
 color:var(--text);
 }
 
@@ -65,6 +66,7 @@ padding:20px;
 .search{
 display:flex;
 gap:10px;
+flex-wrap:wrap;
 }
 
 input{
@@ -72,6 +74,7 @@ flex:1;
 padding:12px;
 border-radius:6px;
 border:1px solid var(--border);
+min-width:220px;
 }
 
 button{
@@ -101,6 +104,7 @@ display:grid;
 grid-template-columns:180px 1fr;
 padding:8px 0;
 border-bottom:1px solid #f1f5f9;
+gap:10px;
 }
 
 .label{
@@ -110,6 +114,7 @@ font-weight:600;
 
 .value{
 font-weight:600;
+word-break:break-word;
 }
 
 .loader{
@@ -128,6 +133,12 @@ animation:blink 1s infinite;
 
 #qrcode{
 margin-top:15px;
+}
+
+@media (max-width: 640px){
+.field{
+grid-template-columns:1fr;
+}
 }
 
 @media print{
@@ -150,177 +161,150 @@ border:2px solid #000;
 </div>
 
 <div class="container">
-<div class="card">
+  <div class="card">
+    <div class="card-header">Consulta de Registro</div>
 
-<div class="card-header">Consulta de Registro</div>
+    <div class="card-body">
+      <div class="search">
+        <input id="codigo" placeholder="Digite o número do registro"/>
+        <button onclick="verificar()">Consultar</button>
+      </div>
 
-<div class="card-body">
+      <div id="loader" class="loader">Consultando base acadêmica...</div>
 
-<div class="search">
-<input id="codigo" placeholder="Digite o número do registro"/>
-<button onclick="verificar()">Consultar</button>
-</div>
+      <div id="resultado" style="display:none; margin-top:20px;">
+        <div class="status" id="status"></div>
 
-<div id="loader" class="loader">Consultando base acadêmica...</div>
+        <div class="field"><div class="label">Nome</div><div class="value" id="nome"></div></div>
+        <div class="field"><div class="label">Formação</div><div class="value" id="curso"></div></div>
+        <div class="field"><div class="label">Conclusão</div><div class="value" id="conclusao"></div></div>
+        <div class="field"><div class="label">Universidade</div><div class="value" id="universidade"></div></div>
+        <div class="field"><div class="label">Polo</div><div class="value" id="polo"></div></div>
+        <div class="field"><div class="label">Registro</div><div class="value" id="registro"></div></div>
+        <div class="field"><div class="label">Protocolo</div><div class="value" id="protocolo"></div></div>
+        <div class="field"><div class="label">Data da Consulta</div><div class="value" id="data"></div></div>
 
-<div id="resultado" style="display:none; margin-top:20px;">
+        <div id="qrcode"></div>
 
-<div class="status" id="status"></div>
-
-<div class="field"><div class="label">Nome</div><div class="value" id="nome"></div></div>
-<div class="field"><div class="label">Curso</div><div class="value" id="curso"></div></div>
-<div class="field"><div class="label">Conclusão</div><div class="value" id="conclusao"></div></div>
-<div class="field"><div class="label">Polo</div><div class="value" id="polo"></div></div>
-<div class="field"><div class="label">Registro</div><div class="value" id="registro"></div></div>
-<div class="field"><div class="label">Protocolo</div><div class="value" id="protocolo"></div></div>
-<div class="field"><div class="label">Data da Consulta</div><div class="value" id="data"></div></div>
-
-<div id="qrcode"></div>
-
-<br>
-<button onclick="window.print()">Imprimir</button>
-
-</div>
-
-</div>
-</div>
+        <br>
+        <button onclick="window.print()">Imprimir</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
-
-function normalizar(s){
-return String(s)
-.normalize("NFD")
-.replace(/[\u0300-\u036f]/g,"")
-.toUpperCase()
-.replace(/\s+/g,"")
-.trim();
-}
-
-const registros={
-
-"377643-22":{
-nome:"Enedina da Silva Bezerra Neta",
-curso:"Bacharel em Educação Física",
-conclusao:"13/02/2026",
-status:"Ativo",
-polo:"Centro Universitário Estácio do Piauí"
-},
-
-"3677467-88":{
-nome:"Ramon de Carvalho Conceição",
-curso:"Bacharel em Engenharia Elétrica",
-conclusao:"24/08/2025",
-status:"Concluído",
-polo:"Centro Universitário Estácio da Bahia — Polo Fratelli Vita (Calçada)"
-},
-
-"2457753-88":{
-nome:"Mayara de Souza Campos",
-curso:"Bacharel em Educação Física",
-conclusao:"23/08/2025",
-status:"Concluído",
-polo:"Centro Universitário Estácio de Minas Gerais — Polo Juiz de Fora-MG"
-}
-
-};
+const supabase = window.supabase.createClient(
+  "https://fghkqwxhrdodyhvfrlzz.supabase.co",
+  "sb_publishable_cwIQcgCl1O0z_CKo6E8xUQ_Y-VoPyve"
+);
 
 function gerarProtocolo(){
-const base = Math.random().toString(36).substring(2,6).toUpperCase();
-const time = Date.now().toString().slice(-6);
-return `EST-${base}-${time}`;
+  const base = Math.random().toString(36).substring(2,6).toUpperCase();
+  const time = Date.now().toString().slice(-6);
+  return `EST-${base}-${time}`;
 }
 
 function delayRealista(){
-return 900 + Math.random()*1400;
+  return 900 + Math.random() * 1400;
 }
 
 function validarFormato(codigo){
-return /^\d{5,8}-\d{2}$/.test(codigo);
+  return /^\d{5,8}-\d{2}$/.test(codigo);
 }
 
-function verificar(){
+async function verificar(){
+  const valor = document.getElementById("codigo").value.trim();
+  const loader = document.getElementById("loader");
+  const resultado = document.getElementById("resultado");
 
-const valor=document.getElementById("codigo").value.trim();
-const loader=document.getElementById("loader");
-const resultado=document.getElementById("resultado");
+  if(!valor){
+    alert("Informe o número do registro.");
+    return;
+  }
 
-if(!valor){
-alert("Informe o número do registro.");
-return;
+  if(!validarFormato(valor)){
+    alert("Formato inválido. Use padrão: 000000-00");
+    return;
+  }
+
+  resultado.style.display = "none";
+  loader.style.display = "block";
+
+  setTimeout(async () => {
+    try {
+      const { data, error } = await supabase
+        .from("registros")
+        .select("*")
+        .eq("registro", valor)
+        .single();
+
+      loader.style.display = "none";
+
+      if(error || !data){
+        alert("Registro não localizado na base acadêmica.");
+        return;
+      }
+
+      const protocolo = gerarProtocolo();
+      const agora = new Date().toLocaleString("pt-BR");
+
+      document.getElementById("nome").innerText = data.nome || "-";
+      document.getElementById("curso").innerText = data.curso || "-";
+      document.getElementById("conclusao").innerText = data.conclusao || "-";
+      document.getElementById("universidade").innerText = data.universidade || "-";
+      document.getElementById("polo").innerText = data.polo || "-";
+      document.getElementById("registro").innerText = data.registro || "-";
+      document.getElementById("protocolo").innerText = protocolo;
+      document.getElementById("data").innerText = agora;
+
+      const statusEl = document.getElementById("status");
+
+      if((data.status || "").toLowerCase() === "ativo"){
+        statusEl.innerText = "● Registro Ativo";
+        statusEl.style.background = "#ecfdf5";
+        statusEl.style.color = "#16a34a";
+      } else {
+        statusEl.innerText = "● Registro Concluído";
+        statusEl.style.background = "#eff6ff";
+        statusEl.style.color = "#2563eb";
+      }
+
+      document.getElementById("qrcode").innerHTML = "";
+
+      const payload = JSON.stringify({
+        registro: data.registro || "",
+        nome: data.nome || "",
+        curso: data.curso || "",
+        conclusao: data.conclusao || "",
+        universidade: data.universidade || "",
+        polo: data.polo || "",
+        status: data.status || "",
+        protocolo: protocolo,
+        dataConsulta: agora
+      });
+
+      new QRCode(document.getElementById("qrcode"), {
+        text: payload,
+        width: 120,
+        height: 120
+      });
+
+      resultado.style.display = "block";
+
+    } catch (e) {
+      loader.style.display = "none";
+      alert("Erro ao conectar com o sistema.");
+      console.error(e);
+    }
+  }, delayRealista());
 }
 
-if(!validarFormato(valor)){
-alert("Formato inválido. Use padrão: 000000-00");
-return;
-}
-
-resultado.style.display="none";
-loader.style.display="block";
-
-setTimeout(()=>{
-
-loader.style.display="none";
-
-const chave=Object.keys(registros)
-.find(k=>normalizar(k)===normalizar(valor));
-
-if(!chave){
-alert("Registro não localizado na base acadêmica.");
-return;
-}
-
-const r=registros[chave];
-const protocolo=gerarProtocolo();
-const agora=new Date().toLocaleString("pt-BR");
-
-document.getElementById("nome").innerText=r.nome;
-document.getElementById("curso").innerText=r.curso;
-document.getElementById("conclusao").innerText=r.conclusao;
-document.getElementById("polo").innerText=r.polo;
-document.getElementById("registro").innerText=chave;
-document.getElementById("protocolo").innerText=protocolo;
-document.getElementById("data").innerText=agora;
-
-const statusEl = document.getElementById("status");
-
-if(r.status === "Ativo"){
-statusEl.innerText = "● Registro Ativo";
-statusEl.style.background = "#ecfdf5";
-statusEl.style.color = "#16a34a";
-}else{
-statusEl.innerText = "● Registro Concluído";
-statusEl.style.background = "#eff6ff";
-statusEl.style.color = "#2563eb";
-}
-
-document.getElementById("qrcode").innerHTML="";
-
-const payload = JSON.stringify({
-registro: chave,
-nome: r.nome,
-protocolo: protocolo,
-data: agora
+document.getElementById("codigo").addEventListener("keypress", function(e){
+  if(e.key === "Enter"){
+    verificar();
+  }
 });
-
-new QRCode(document.getElementById("qrcode"),{
-text: payload,
-width:120,
-height:120
-});
-
-resultado.style.display="block";
-
-}, delayRealista());
-
-}
-
-document.getElementById("codigo").addEventListener("keypress",function(e){
-if(e.key==="Enter"){
-verificar();
-}
-});
-
 </script>
 
 </body>
