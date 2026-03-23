@@ -111,9 +111,8 @@ async function verificar(){
     console.log("dados recebidos:", data);
     console.log("error:", error);
 
-    loader.style.display = "none";
-
     if(error){
+      loader.style.display = "none";
       alert("Erro: " + error.message);
       return;
     }
@@ -121,6 +120,10 @@ async function verificar(){
     const encontrado = (data || []).find(item =>
       normalizarRegistro(item.registro) === codigoNormalizado
     );
+
+    console.log("encontrado:", encontrado);
+
+    loader.style.display = "none";
 
     if(!encontrado){
       alert("Registro não encontrado");
@@ -144,6 +147,7 @@ async function verificar(){
     }
 
     document.getElementById("qrcode").innerHTML = "";
+
     new QRCode(document.getElementById("qrcode"), {
       text: JSON.stringify(encontrado),
       width: 120,
@@ -153,7 +157,7 @@ async function verificar(){
     resultado.style.display = "block";
   }catch(e){
     loader.style.display = "none";
-    console.error(e);
+    console.error("ERRO REAL:", e);
     alert("Erro ao conectar com o sistema.");
   }
 }
