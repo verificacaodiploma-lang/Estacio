@@ -72,15 +72,12 @@ button{
 </div>
 
 <script>
-
-// 🔌 CONEXÃO (nome diferente pra evitar erro)
 const banco = window.supabase.createClient(
   "https://fghkqwxhrdodyhvfrlzz.supabase.co",
   "sb_publishable_cwIQcgCl1O0z_CKo6E8xUQ_Y-VoPyve"
 );
 
 async function verificar(){
-
   const codigo = document.getElementById("codigo").value.trim();
   const loader = document.getElementById("loader");
   const resultado = document.getElementById("resultado");
@@ -90,25 +87,33 @@ async function verificar(){
     return;
   }
 
-  loader.style.display="block";
-  resultado.style.display="none";
+  loader.style.display = "block";
+  resultado.style.display = "none";
 
   try{
-
     const { data, error } = await banco
       .from("registros")
       .select("*")
       .eq("registro", codigo)
-      .single();
+      .limit(1)
+      .maybeSingle();
 
-    loader.style.display="none";
+    console.log("codigo digitado:", JSON.stringify(codigo));
+    console.log("data:", data);
+    console.log("error:", error);
 
-    if(error || !data){
+    loader.style.display = "none";
+
+    if(error){
+      alert("Erro: " + error.message);
+      return;
+    }
+
+    if(!data){
       alert("Registro não encontrado");
       return;
     }
 
-    // preencher dados
     document.getElementById("nome").innerText = data.nome || "";
     document.getElementById("curso").innerText = data.curso || "";
     document.getElementById("conclusao").innerText = data.conclusao || "";
@@ -116,9 +121,7 @@ async function verificar(){
     document.getElementById("polo").innerText = data.polo || "";
     document.getElementById("registro").innerText = data.registro || "";
 
-    // status
     const statusEl = document.getElementById("status");
-
     if(data.status === "Ativo"){
       statusEl.innerText = "Registro Ativo";
       statusEl.style.color = "green";
@@ -127,23 +130,20 @@ async function verificar(){
       statusEl.style.color = "blue";
     }
 
-    // QR Code
     document.getElementById("qrcode").innerHTML = "";
-    new QRCode(document.getElementById("qrcode"),{
+    new QRCode(document.getElementById("qrcode"), {
       text: JSON.stringify(data),
-      width:120,
-      height:120
+      width: 120,
+      height: 120
     });
 
-    resultado.style.display="block";
-
+    resultado.style.display = "block";
   }catch(e){
-    loader.style.display="none";
+    loader.style.display = "none";
     console.error(e);
     alert("Erro ao conectar com o sistema.");
   }
 }
-
 </script>
 
 </body>
