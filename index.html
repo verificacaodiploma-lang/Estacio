@@ -77,8 +77,19 @@ const banco = window.supabase.createClient(
   "sb_publishable_cwIQcgCl1O0z_CKo6E8xUQ_Y-VoPyve"
 );
 
+function normalizarRegistro(valor){
+  return String(valor || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9]/g, "")
+    .toUpperCase()
+    .trim();
+}
+
 async function verificar(){
   const codigo = document.getElementById("codigo").value.trim();
+  const codigoNormalizado = normalizarRegistro(codigo);
+
   const loader = document.getElementById("loader");
   const resultado = document.getElementById("resultado");
 
@@ -93,13 +104,11 @@ async function verificar(){
   try{
     const { data, error } = await banco
       .from("registros")
-      .select("*")
-      .eq("registro", codigo)
-      .limit(1)
-      .maybeSingle();
+      .select("*");
 
     console.log("codigo digitado:", JSON.stringify(codigo));
-    console.log("data:", data);
+    console.log("codigo normalizado:", codigoNormalizado);
+    console.log("dados recebidos:", data);
     console.log("error:", error);
 
     loader.style.display = "none";
@@ -109,20 +118,24 @@ async function verificar(){
       return;
     }
 
-    if(!data){
+    const encontrado = (data || []).find(item =>
+      normalizarRegistro(item.registro) === codigoNormalizado
+    );
+
+    if(!encontrado){
       alert("Registro não encontrado");
       return;
     }
 
-    document.getElementById("nome").innerText = data.nome || "";
-    document.getElementById("curso").innerText = data.curso || "";
-    document.getElementById("conclusao").innerText = data.conclusao || "";
-    document.getElementById("universidade").innerText = data.universidade || "";
-    document.getElementById("polo").innerText = data.polo || "";
-    document.getElementById("registro").innerText = data.registro || "";
+    document.getElementById("nome").innerText = encontrado.nome || "";
+    document.getElementById("curso").innerText = encontrado.curso || "";
+    document.getElementById("conclusao").innerText = encontrado.conclusao || "";
+    document.getElementById("universidade").innerText = encontrado.universidade || "";
+    document.getElementById("polo").innerText = encontrado.polo || "";
+    document.getElementById("registro").innerText = encontrado.registro || "";
 
     const statusEl = document.getElementById("status");
-    if(data.status === "Ativo"){
+    if((encontrado.status || "").toUpperCase() === "ATIVO"){
       statusEl.innerText = "Registro Ativo";
       statusEl.style.color = "green";
     }else{
@@ -132,7 +145,7 @@ async function verificar(){
 
     document.getElementById("qrcode").innerHTML = "";
     new QRCode(document.getElementById("qrcode"), {
-      text: JSON.stringify(data),
+      text: JSON.stringify(encontrado),
       width: 120,
       height: 120
     });
