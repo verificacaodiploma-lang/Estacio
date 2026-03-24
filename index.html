@@ -77,6 +77,7 @@ const banco = window.supabase.createClient(
   "sb_publishable_cwIQcgCl1O0z_CKo6E8xUQ_Y-VoPyve"
 );
 
+// 🔥 Normaliza (ignora hífen, espaço, etc)
 function normalizarRegistro(valor){
   return String(valor || "")
     .normalize("NFD")
@@ -106,13 +107,14 @@ async function verificar(){
       .from("registros")
       .select("*");
 
-    console.log("codigo digitado:", JSON.stringify(codigo));
+    console.log("codigo digitado:", codigo);
     console.log("codigo normalizado:", codigoNormalizado);
     console.log("dados recebidos:", data);
     console.log("error:", error);
 
+    loader.style.display = "none";
+
     if(error){
-      loader.style.display = "none";
       alert("Erro: " + error.message);
       return;
     }
@@ -123,13 +125,12 @@ async function verificar(){
 
     console.log("encontrado:", encontrado);
 
-    loader.style.display = "none";
-
     if(!encontrado){
       alert("Registro não encontrado");
       return;
     }
 
+    // Preencher dados
     document.getElementById("nome").innerText = encontrado.nome || "";
     document.getElementById("curso").innerText = encontrado.curso || "";
     document.getElementById("conclusao").innerText = encontrado.conclusao || "";
@@ -137,6 +138,7 @@ async function verificar(){
     document.getElementById("polo").innerText = encontrado.polo || "";
     document.getElementById("registro").innerText = encontrado.registro || "";
 
+    // Status
     const statusEl = document.getElementById("status");
     if((encontrado.status || "").toUpperCase() === "ATIVO"){
       statusEl.innerText = "Registro Ativo";
@@ -146,15 +148,16 @@ async function verificar(){
       statusEl.style.color = "blue";
     }
 
+    // 🔥 QR CODE (CORRIGIDO)
     document.getElementById("qrcode").innerHTML = "";
-
     new QRCode(document.getElementById("qrcode"), {
-      text: JSON.stringify(encontrado),
+      text: encontrado.registro,
       width: 120,
       height: 120
     });
 
     resultado.style.display = "block";
+
   }catch(e){
     loader.style.display = "none";
     console.error("ERRO REAL:", e);
