@@ -1,170 +1,225 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Estácio — Verificação de Registro</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Estácio — Verificação de Registro</title>
 
-<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<style>
-body{
-  margin:0;
-  background:#eef3f9;
-  font-family:Arial,sans-serif;
-}
-.container{
-  max-width:700px;
-  margin:30px auto;
-  padding:20px;
-}
-.card{
-  background:#fff;
-  border-radius:10px;
-  padding:20px;
-}
-input{
-  padding:10px;
-  width:70%;
-}
-button{
-  padding:10px;
-  background:#005daa;
-  color:#fff;
-  border:none;
-  cursor:pointer;
-}
-.field{
-  margin:8px 0;
-}
-.status{
-  margin-bottom:10px;
-  font-weight:bold;
-}
-</style>
+  <style>
+    body{
+      margin:0;
+      background:#eef3f9;
+      font-family:Arial,sans-serif;
+    }
+    .container{
+      max-width:700px;
+      margin:30px auto;
+      padding:20px;
+    }
+    .card{
+      background:#fff;
+      border-radius:10px;
+      padding:20px;
+      box-shadow:0 2px 10px rgba(0,0,0,0.08);
+    }
+    .topo{
+      margin-bottom:20px;
+    }
+    .topo h1{
+      margin:0 0 8px 0;
+      font-size:24px;
+      color:#005daa;
+    }
+    .topo p{
+      margin:0;
+      color:#444;
+    }
+    .linha-busca{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:15px;
+    }
+    input{
+      padding:12px;
+      flex:1;
+      min-width:260px;
+      border:1px solid #c9d4e0;
+      border-radius:8px;
+      font-size:16px;
+    }
+    button{
+      padding:12px 18px;
+      background:#005daa;
+      color:#fff;
+      border:none;
+      border-radius:8px;
+      cursor:pointer;
+      font-size:16px;
+    }
+    button:hover{
+      background:#00457d;
+    }
+    .field{
+      margin:10px 0;
+      font-size:16px;
+    }
+    .field strong{
+      color:#222;
+    }
+    .status{
+      margin-bottom:14px;
+      font-weight:bold;
+      font-size:18px;
+    }
+    #loader{
+      display:none;
+      margin:10px 0 15px;
+      color:#005daa;
+      font-weight:bold;
+    }
+    #resultado{
+      display:none;
+      margin-top:20px;
+      border-top:1px solid #e7edf5;
+      padding-top:20px;
+    }
+    #qrcode{
+      margin-top:20px;
+    }
+    .rodape{
+      margin-top:18px;
+      font-size:13px;
+      color:#666;
+    }
+  </style>
 </head>
-
 <body>
 
-<div class="container">
-  <div class="card">
+  <div class="container">
+    <div class="card">
 
-    <input id="codigo" placeholder="Digite o registro"/>
-    <button onclick="verificar()">Consultar</button>
+      <div class="topo">
+        <h1>Verificação de Registro</h1>
+        <p>Consulte a autenticidade de um registro acadêmico.</p>
+      </div>
 
-    <div id="loader" style="display:none;">Consultando...</div>
+      <div class="linha-busca">
+        <input id="codigo" placeholder="Digite o registro" />
+        <button onclick="verificar()">Consultar</button>
+      </div>
 
-    <div id="resultado" style="display:none;">
-      <div class="status" id="status"></div>
+      <div id="loader">Consultando...</div>
 
-      <div class="field">Nome: <span id="nome"></span></div>
-      <div class="field">Formação: <span id="curso"></span></div>
-      <div class="field">Conclusão: <span id="conclusao"></span></div>
-      <div class="field">Universidade: <span id="universidade"></span></div>
-      <div class="field">Polo: <span id="polo"></span></div>
-      <div class="field">Registro: <span id="registro"></span></div>
+      <div id="resultado">
+        <div class="status" id="status"></div>
 
-      <div id="qrcode"></div>
+        <div class="field"><strong>Nome:</strong> <span id="nome"></span></div>
+        <div class="field"><strong>Formação:</strong> <span id="curso"></span></div>
+        <div class="field"><strong>Conclusão:</strong> <span id="conclusao"></span></div>
+        <div class="field"><strong>Universidade:</strong> <span id="universidade"></span></div>
+        <div class="field"><strong>Polo:</strong> <span id="polo"></span></div>
+        <div class="field"><strong>Registro:</strong> <span id="registro"></span></div>
+
+        <div id="qrcode"></div>
+
+        <div class="rodape">
+          Este resultado foi validado no sistema de registros.
+        </div>
+      </div>
+
     </div>
-
   </div>
-</div>
 
-<script>
-const banco = window.supabase.createClient(
-  "https://fghkqwxhrdodyhvfrlzz.supabase.co",
-  "sb_publishable_cwIQcgCl1O0z_CKo6E8xUQ_Y-VoPyve"
-);
-
-// 🔥 Normaliza (ignora hífen, espaço, etc)
-function normalizarRegistro(valor){
-  return String(valor || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-zA-Z0-9]/g, "")
-    .toUpperCase()
-    .trim();
-}
-
-async function verificar(){
-  const codigo = document.getElementById("codigo").value.trim();
-  const codigoNormalizado = normalizarRegistro(codigo);
-
-  const loader = document.getElementById("loader");
-  const resultado = document.getElementById("resultado");
-
-  if(!codigo){
-    alert("Digite o registro");
-    return;
-  }
-
-  loader.style.display = "block";
-  resultado.style.display = "none";
-
-  try{
-    const { data, error } = await banco
-      .from("registros")
-      .select("*");
-
-    console.log("codigo digitado:", codigo);
-    console.log("codigo normalizado:", codigoNormalizado);
-    console.log("dados recebidos:", data);
-    console.log("error:", error);
-
-    loader.style.display = "none";
-
-    if(error){
-      alert("Erro: " + error.message);
-      return;
-    }
-
-    const encontrado = (data || []).find(item =>
-      normalizarRegistro(item.registro) === codigoNormalizado
+  <script>
+    const banco = window.supabase.createClient(
+      "https://fghkqwxhrdodyhvfrlzz.supabase.co",
+      "sb_publishable_cwIQcgCl1O0z_CKo6E8xUQ_Y-VoPyve"
     );
 
-    console.log("encontrado:", encontrado);
-
-    if(!encontrado){
-      alert("Registro não encontrado");
-      return;
+    function normalizarRegistro(valor){
+      return String(valor || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-zA-Z0-9]/g, "")
+        .toUpperCase()
+        .trim();
     }
 
-    // Preencher dados
-    document.getElementById("nome").innerText = encontrado.nome || "";
-    document.getElementById("curso").innerText = encontrado.curso || "";
-    document.getElementById("conclusao").innerText = encontrado.conclusao || "";
-    document.getElementById("universidade").innerText = encontrado.universidade || "";
-    document.getElementById("polo").innerText = encontrado.polo || "";
-    document.getElementById("registro").innerText = encontrado.registro || "";
+    async function verificar(){
+      const codigo = document.getElementById("codigo").value.trim();
+      const codigoNormalizado = normalizarRegistro(codigo);
 
-    // Status
-    const statusEl = document.getElementById("status");
-    if((encontrado.status || "").toUpperCase() === "ATIVO"){
-      statusEl.innerText = "Registro Ativo";
-      statusEl.style.color = "green";
-    }else{
-      statusEl.innerText = "Registro Concluído";
-      statusEl.style.color = "blue";
+      const loader = document.getElementById("loader");
+      const resultado = document.getElementById("resultado");
+
+      if(!codigo){
+        alert("Digite o registro");
+        return;
+      }
+
+      loader.style.display = "block";
+      resultado.style.display = "none";
+
+      try{
+        const { data, error } = await banco
+          .from("registros")
+          .select("*")
+          .eq("registro_normalizado", codigoNormalizado)
+          .maybeSingle();
+
+        console.log("Código digitado:", codigo);
+        console.log("Código normalizado:", codigoNormalizado);
+        console.log("Registro encontrado:", data);
+        console.log("Erro:", error);
+
+        loader.style.display = "none";
+
+        if(error){
+          alert("Erro: " + error.message);
+          return;
+        }
+
+        if(!data){
+          alert("Registro não encontrado");
+          return;
+        }
+
+        document.getElementById("nome").innerText = data.nome || "";
+        document.getElementById("curso").innerText = data.curso || "";
+        document.getElementById("conclusao").innerText = data.conclusao || "";
+        document.getElementById("universidade").innerText = data.universidade || "";
+        document.getElementById("polo").innerText = data.polo || "";
+        document.getElementById("registro").innerText = data.registro || "";
+
+        const statusEl = document.getElementById("status");
+        if((data.status || "").toUpperCase() === "ATIVO"){
+          statusEl.innerText = "Registro Ativo";
+          statusEl.style.color = "green";
+        } else {
+          statusEl.innerText = "Registro Concluído";
+          statusEl.style.color = "blue";
+        }
+
+        document.getElementById("qrcode").innerHTML = "";
+        new QRCode(document.getElementById("qrcode"), {
+          text: data.registro || "",
+          width: 120,
+          height: 120
+        });
+
+        resultado.style.display = "block";
+
+      } catch(e){
+        loader.style.display = "none";
+        console.error("ERRO REAL:", e);
+        alert("Erro ao conectar com o sistema.");
+      }
     }
-
-    // 🔥 QR CODE (CORRIGIDO)
-    document.getElementById("qrcode").innerHTML = "";
-    new QRCode(document.getElementById("qrcode"), {
-      text: encontrado.registro,
-      width: 120,
-      height: 120
-    });
-
-    resultado.style.display = "block";
-
-  }catch(e){
-    loader.style.display = "none";
-    console.error("ERRO REAL:", e);
-    alert("Erro ao conectar com o sistema.");
-  }
-}
-</script>
+  </script>
 
 </body>
 </html>
